@@ -9,8 +9,8 @@ using Plustek.Services;
 namespace Plustek {
     [SupportedOSPlatform("windows")]
     class Program {
-        private static readonly bool TEST_STATIC_IMAGE = false;
-        private static readonly string TEST_IMAGE_PATH = @"C:\Users\MAH\AppData\Local\Temp\WebFXScan\IMG_22943625_00001.jpg";
+        private static readonly bool TEST_STATIC_IMAGE = true;
+        private static readonly string TEST_IMAGE_PATH = @"C:\Users\MAH\Desktop\ID.jpg";
 
         static async Task<int> Main(string[] args) {
             var services = new ServiceCollection();

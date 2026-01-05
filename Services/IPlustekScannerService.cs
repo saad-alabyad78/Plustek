@@ -139,18 +139,20 @@ namespace Plustek.Services {
 
                 _logger.LogInformation("Temp folder: {Folder}", tempScanFolder);
 
-                // Configure scanner - WORKING configuration
+                // Configure scanner - try different paper sizes for larger capture
                 var scanData = new Dictionary<string, object> {
                     { "device-name", deviceName },
                     { "source", "Camera" },
-                    { "paper-size", "2592x1944" },
-                    { "resolution", 600 },
+                    { "paper-size", "A3" },              // A3 is larger than A4
+                    { "resolution", 300 },                // Lower resolution = potentially wider view
                     { "mode", "color" },
                     { "imagefmt", "jpg" },
                     { "recognize-type", "barcode" },
                     { "quality", 100 },
                     { "base64enc", false }
                 };
+
+                _logger.LogInformation("Attempting scan with paper-size: A3, resolution: 300");
 
                 var scanConfig = new {
                     type = "call",
