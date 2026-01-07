@@ -50,7 +50,7 @@ namespace Plustek.Runner {
                 return 0;
             }
             finally {
-                await _scanner.DisconnectAsync();
+               await _scanner.DisconnectAsync();
             }
         }
 
@@ -144,45 +144,68 @@ namespace Plustek.Runner {
             Console.Write("🔍 Reading barcode... ");
 
             var barcode = await _barcodeDecoder.ReadAsync(outputPath);
+
             if (barcode == null) {
-                Console.WriteLine("❌ No barcode found");
-                Console.WriteLine("\nTips:");
-                Console.WriteLine("  - Ensure ID card is flat on scanner");
-                Console.WriteLine("  - Check barcode is visible and clear");
-                Console.WriteLine("  - Try scanning again");
+                // No barcode found - this is the FRONT face
+                Console.WriteLine("✓ Front face detected (no barcode)");
+
+                // We don't know the National ID yet, so save to temp location
+                string frontFacePath = Path.Combine(_settings.OutputDirectory, $"front_face_{DateTime.Now:yyyyMMdd_HHmmss}.jpg");
+
+                if (File.Exists(outputPath)) {
+                    File.Move(outputPath, frontFacePath, overwrite: true);
+                }
+
+                Console.WriteLine($"\n✓ Front face saved to: {frontFacePath}");
+                Console.WriteLine("\nℹ️  Scan the back of the ID card next to extract data.");
                 return;
             }
-            Console.WriteLine("✓");
+
+            // Barcode found - this is the BACK face
+            Console.WriteLine("✓ Back face detected (barcode found)");
 
             Console.Write("📋 Parsing data... ");
             var idData = SyrianIdParser.Parse(barcode.Text);
             if (idData == null) {
                 Console.WriteLine("❌ Parse failed");
                 Console.WriteLine("Barcode was read but could not be parsed as Syrian ID");
+
+                // Still save as back_face even if parsing fails
+                string backFacePath = Path.Combine(_settings.OutputDirectory, $"back_face_{DateTime.Now:yyyyMMdd_HHmmss}.jpg");
+                if (File.Exists(outputPath)) {
+                    File.Move(outputPath, backFacePath, overwrite: true);
+                }
+                Console.WriteLine($"\n✓ Back face saved to: {backFacePath}");
                 return;
             }
             Console.WriteLine("✓");
 
             DisplayResults(idData);
+
             try {
-                // Move file to National ID folder
+                // Extract National ID
                 string nationalId = idData.Fields.Count > 5 ? idData.Fields[5].Trim() : "Unknown";
 
                 if (!string.IsNullOrEmpty(nationalId) && nationalId != "Unknown") {
-                    string finalPath = _settings.GenerateOutputPathByNationalId(nationalId);
+                    // Use the back_face path from AppSettings
+                    string backFacePath = _settings.GetBackFacePath(nationalId);
 
-                    // Move the scanned image to the National ID folder
+                    // Move the scanned image to the National ID folder as back_face.jpg
                     if (File.Exists(outputPath)) {
-                        File.Move(outputPath, finalPath, overwrite: true);
+                        File.Move(outputPath, backFacePath, overwrite: true);
                     }
 
                     // Save outputs to National ID folder
-                    await _outputWriter.SaveAsync(idData, finalPath);
+                    await _outputWriter.SaveAsync(idData, backFacePath);
 
-                    Console.WriteLine($"\n✓ Files saved to: {Path.GetDirectoryName(finalPath)}");
+                    Console.WriteLine($"\n✓ Back face and data saved to: {Path.GetDirectoryName(backFacePath)}");
                 } else {
                     // Fallback: save to default location
-                    await _outputWriter.SaveAsync(idData, outputPath);
+                    string backFacePath = Path.Combine(_settings.OutputDirectory, $"back_face_{DateTime.Now:yyyyMMdd_HHmmss}.jpg");
+                    if (File.Exists(outputPath)) {
+                        File.Move(outputPath, backFacePath, overwrite: true);
+                    }
+                    await _outputWriter.SaveAsync(idData, backFacePath);
                     Console.WriteLine($"\n✓ Files saved to: {_settings.OutputDirectory}");
                 }
             }
@@ -190,6 +213,7 @@ namespace Plustek.Runner {
                 Console.WriteLine($"\n⚠ Warning: Could not save output files: {ex.Message}");
             }
         }
+
 
         private void DisplayResults(Models.SyrianIdData data) {
             Console.WriteLine("\n" + new string('═', 60));

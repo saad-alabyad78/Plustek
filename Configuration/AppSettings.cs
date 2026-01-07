@@ -53,5 +53,17 @@ namespace Plustek.Configuration {
             string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             return Path.Combine(idFolder, $"scan_{timestamp}.jpg");
         }
+
+        public string GetFrontFacePath(string nationalId) {
+            string idFolder = Path.Combine(OutputDirectory, nationalId);
+            Directory.CreateDirectory(idFolder);
+            return Path.Combine(idFolder, "front_face.jpg");
+        }
+
+        public string GetBackFacePath(string nationalId) {
+            string idFolder = Path.Combine(OutputDirectory, nationalId);
+            Directory.CreateDirectory(idFolder);
+            return Path.Combine(idFolder, "back_face.jpg");
+        }
     }
 }
