@@ -44,5 +44,14 @@ namespace Plustek.Configuration {
             string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             return Path.Combine(OutputDirectory, $"scan_{timestamp}.jpg");
         }
+
+        public string GenerateOutputPathByNationalId(string nationalId) {
+            // Create folder by National ID
+            string idFolder = Path.Combine(OutputDirectory, nationalId);
+            Directory.CreateDirectory(idFolder);
+
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            return Path.Combine(idFolder, $"scan_{timestamp}.jpg");
+        }
     }
 }

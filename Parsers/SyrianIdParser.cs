@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Text;
-using System.Text.RegularExpressions;
+using System.Linq;
 using Plustek.Models;
 
 namespace Plustek.Parsers {
@@ -14,79 +14,81 @@ namespace Plustek.Parsers {
                 RawBarcodeData = barcodeData
             };
 
-            string[] fields = barcodeData.Split('#');
+            try {
+                // Register encoding provider for Arabic
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            // Convert fields to Arabic
-            for (int i = 0; i < fields.Length; i++) {
-                fields[i] = ConvertToArabic(fields[i]);
+                // Split by # delimiter
+                string[] rawFields = barcodeData.Split('#');
+
+                Console.WriteLine($"[DEBUG] Total raw fields: {rawFields.Length}");
+
+                // Convert each field from ISO-8859-1 to Windows-1256 (Arabic)
+                foreach (var field in rawFields) {
+                    string converted = ConvertToArabic(field);
+                    data.Fields.Add(converted);
+
+                    // Debug: show first 50 chars of each field
+                    string preview = converted.Length > 50
+                        ? converted.Substring(0, 50) + "..."
+                        : converted;
+                    Console.WriteLine($"[DEBUG] Field: {preview}");
+                }
+
+                Console.WriteLine($"[DEBUG] Successfully parsed {data.Fields.Count} fields");
             }
-
-            // Field 1: Name Arabic
-            if (fields.Length > 1) {
-                data.FullNameArabic = fields[1].Trim();
-            }
-
-            // Field 2: Name English
-            if (fields.Length > 2) {
-                data.FullNameEnglish = fields[2].Trim();
-            }
-
-            // Field 3: Address
-            if (fields.Length > 3) {
-                data.AddressArabic = fields[3].Trim();
-            }
-
-            // Field 4: Date of Birth
-            if (fields.Length > 4) {
-                data.DateOfBirth = ExtractDate(fields[4]);
-            }
-
-            // Field 5: National ID
-            if (fields.Length > 5) {
-                data.NationalId = fields[5].Trim();
-                data.Gender = DetermineGender(data.NationalId);
+            catch (Exception ex) {
+                Console.WriteLine($"[ERROR] Parser error: {ex.Message}");
+                return null;
             }
 
             return data;
         }
 
         private static string ConvertToArabic(string text) {
-            try {
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                var bytes = Encoding.GetEncoding("ISO-8859-1").GetBytes(text);
-                return Encoding.GetEncoding("Windows-1256").GetString(bytes);
+            if (string.IsNullOrEmpty(text)) {
+                return string.Empty;
             }
-            catch {
+
+            try {
+                // Convert from ISO-8859-1 (Latin-1) to Windows-1256 (Arabic)
+                var isoEncoding = Encoding.GetEncoding("ISO-8859-1");
+                var arabicEncoding = Encoding.GetEncoding("Windows-1256");
+
+                byte[] isoBytes = isoEncoding.GetBytes(text);
+                string arabicText = arabicEncoding.GetString(isoBytes);
+
+                // Check if conversion produced valid Arabic text
+                if (IsValidArabicText(arabicText)) {
+                    return arabicText;
+                }
+
+                // If not valid Arabic, return original
+                return text;
+            }
+            catch (Exception ex) {
+                Console.WriteLine($"[WARN] Encoding conversion failed: {ex.Message}");
                 return text;
             }
         }
 
-        private static DateTime? ExtractDate(string text) {
-            var match = Regex.Match(text, @"(\d{1,2})[-/](\d{1,2})[-/](\d{4})");
-            if (match.Success) {
-                try {
-                    int day = int.Parse(match.Groups[1].Value);
-                    int month = int.Parse(match.Groups[2].Value);
-                    int year = int.Parse(match.Groups[3].Value);
-                    return new DateTime(year, month, day);
-                }
-                catch { }
-            }
-            return null;
-        }
-
-        private static string DetermineGender(string nationalId) {
-            if (string.IsNullOrEmpty(nationalId)) {
-                return "Unknown";
+        private static bool IsValidArabicText(string text) {
+            if (string.IsNullOrEmpty(text)) {
+                return false;
             }
 
-            try {
-                int lastDigit = int.Parse(nationalId[^1].ToString());
-                return lastDigit % 2 == 1 ? "Male" : "Female";
-            }
-            catch {
-                return "Unknown";
-            }
+            // Count Arabic characters (Unicode range 0x0600-0x06FF)
+            int arabicChars = text.Count(c => c >= 0x0600 && c <= 0x06FF);
+            int totalChars = text.Length;
+            int spaces = text.Count(char.IsWhiteSpace);
+            int digits = text.Count(char.IsDigit);
+            int punctuation = text.Count(c => c == '-' || c == '/' || c == ',' || c == '.');
+
+            // Valid if contains Arabic characters and most chars are valid
+            int validChars = arabicChars + spaces + digits + punctuation;
+            double validRatio = (double)validChars / totalChars;
+
+            return arabicChars > 0 && validRatio > 0.7;
         }
     }
 }
