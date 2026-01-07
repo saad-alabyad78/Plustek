@@ -1,10 +1,9 @@
-﻿using System;
+﻿using Plustek.Interfaces;
+using Plustek.Models;
 using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Plustek.Interfaces;
-using Plustek.Models;
 
 namespace Plustek.Services {
     public class OutputWriterService : IOutputWriter {

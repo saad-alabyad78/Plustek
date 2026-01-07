@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Plustek.Configuration;
+using Plustek.Interfaces;
+using Plustek.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,9 +10,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Plustek.Configuration;
-using Plustek.Interfaces;
-using Plustek.Models;
 
 namespace Plustek.Services {
     public class ScannerService : IScanner {

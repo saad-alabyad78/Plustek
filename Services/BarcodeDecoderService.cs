@@ -1,10 +1,10 @@
-﻿using System;
-using System.Text;
-using System.Threading.Tasks;
-using BarcodeIdScan;
+﻿using BarcodeIdScan;
 using Plustek.Configuration;
 using Plustek.Interfaces;
 using Plustek.Models;
+using System;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Plustek.Services {
     public class BarcodeDecoderService : IBarcodeDecoder {

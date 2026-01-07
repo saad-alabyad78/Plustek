@@ -1,7 +1,7 @@
-﻿using System;
-using System.Text;
+﻿using Plustek.Models;
+using System;
 using System.Linq;
-using Plustek.Models;
+using System.Text;
 
 namespace Plustek.Parsers {
     public static class SyrianIdParser {

@@ -1,13 +1,11 @@
-﻿using System;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Plustek.Configuration;
+﻿using Plustek.Configuration;
 using Plustek.Interfaces;
-using Plustek.Services;
 using Plustek.Runner;
+using Plustek.Services;
 using Plustek.ViewModels;
 using Plustek.Views;
+using System;
+using System.Runtime.InteropServices;
 
 namespace Plustek {
     class Program {

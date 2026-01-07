@@ -1,10 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using Plustek.Configuration;
+﻿using Plustek.Configuration;
 using Plustek.Interfaces;
 using Plustek.Parsers;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace Plustek.Runner {
     public class ScannerRunner {
@@ -50,7 +49,7 @@ namespace Plustek.Runner {
                 return 0;
             }
             finally {
-               await _scanner.DisconnectAsync();
+                await _scanner.DisconnectAsync();
             }
         }
 

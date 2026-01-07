@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Plustek.Configuration;
+using Plustek.Interfaces;
+using Plustek.Parsers;
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
-using Plustek.Configuration;
-using Plustek.Interfaces;
-using Plustek.Parsers;
 using WpfBrush = System.Windows.Media.Brush;
 using WpfBrushes = System.Windows.Media.Brushes;
 

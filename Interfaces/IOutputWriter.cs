@@ -1,5 +1,5 @@
-﻿using System.Threading.Tasks;
-using Plustek.Models;
+﻿using Plustek.Models;
+using System.Threading.Tasks;
 
 namespace Plustek.Interfaces {
     public interface IOutputWriter {
