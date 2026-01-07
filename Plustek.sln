@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34902.65
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Plustek", "Plustek.csproj", "{8F392B32-4027-4F33-9DDB-DE27DD6E5389}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Plustek", "Plustek.csproj", "{8F392B32-4027-4F33-9DDB-DE27DD6E5389}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BarcodeIdScan", "..\BarcodeReader\BarcodeIdScan.csproj", "{DBD1F311-537A-47AF-A1F1-9DD1963666CD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{8F392B32-4027-4F33-9DDB-DE27DD6E5389}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F392B32-4027-4F33-9DDB-DE27DD6E5389}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F392B32-4027-4F33-9DDB-DE27DD6E5389}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBD1F311-537A-47AF-A1F1-9DD1963666CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBD1F311-537A-47AF-A1F1-9DD1963666CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBD1F311-537A-47AF-A1F1-9DD1963666CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBD1F311-537A-47AF-A1F1-9DD1963666CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

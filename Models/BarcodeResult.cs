@@ -1,10 +1,7 @@
-﻿using ZXing;
-
-namespace Plustek.Models {
+﻿namespace Plustek.Models {
     public class BarcodeResult {
-        public string Text { get; init; } = string.Empty;
-        public BarcodeFormat Format { get; init; }
-        public ResultPoint[]? Points { get; init; }
-        public int Confidence { get; init; }   // heuristic score (0–100)
+        public string Text { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public int Length { get; set; }
     }
 }
