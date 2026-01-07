@@ -66,7 +66,7 @@ namespace Plustek.Runner {
                 return 0;
             }
             finally {
-                await _scanner.DisconnectAsync();
+                // await _scanner.DisconnectAsync();
             }
         }
 
