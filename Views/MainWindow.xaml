@@ -3,201 +3,203 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Plustek Syrian ID Scanner" Height="700" Width="1200"
         WindowStartupLocation="CenterScreen">
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+	<Grid Margin="20">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Border Grid.Row="0" Background="#2c3e50" Padding="15" CornerRadius="5" Margin="0,0,0,20">
-            <TextBlock Text="PLUSTEK SYRIAN ID SCANNER" 
-                       FontSize="24" FontWeight="Bold" 
-                       Foreground="White" 
+		<!-- Header -->
+		<Border Grid.Row="0" Background="#2c3e50" Padding="15" CornerRadius="5" Margin="0,0,0,20">
+			<TextBlock Text="PLUSTEK SYRIAN ID SCANNER"
+                       FontSize="24" FontWeight="Bold"
+                       Foreground="White"
                        HorizontalAlignment="Center"/>
-        </Border>
+		</Border>
 
-        <!-- Main Content -->
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="20"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+		<!-- Main Content -->
+		<Grid Grid.Row="1">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="20"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
 
-            <!-- Left Panel - Images -->
-            <Grid Grid.Column="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="20"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+			<!-- Left Panel - Images -->
+			<Grid Grid.Column="0">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="20"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
 
-                <!-- Front Face -->
-                <Border Grid.Row="0" BorderBrush="#34495e" BorderThickness="2" CornerRadius="5">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        
-                        <TextBlock Grid.Row="0" Text="FRONT FACE" 
-                                   FontSize="16" FontWeight="Bold" 
+				<!-- Front Face -->
+				<Border Grid.Row="0" BorderBrush="#34495e" BorderThickness="2" CornerRadius="5">
+					<Grid>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="*"/>
+						</Grid.RowDefinitions>
+
+						<TextBlock Grid.Row="0" Text="FRONT FACE"
+                                   FontSize="16" FontWeight="Bold"
                                    Padding="10" Background="#ecf0f1"
                                    HorizontalAlignment="Stretch"/>
-                        
-                        <Border Grid.Row="1" Background="#ecf0f1" Margin="2">
-                            <Grid>
-                                <!-- Placeholder when no image -->
-                                <TextBlock Text="No Image" 
-                                           FontSize="18" 
+
+						<Border Grid.Row="1" Background="#ecf0f1" Margin="2">
+							<Grid>
+								<!-- Placeholder when no image -->
+								<TextBlock Text="No Image"
+                                           FontSize="18"
                                            Foreground="#95a5a6"
-                                           HorizontalAlignment="Center" 
+                                           HorizontalAlignment="Center"
                                            VerticalAlignment="Center"
                                            Visibility="{Binding FrontFacePlaceholderVisible}"/>
-                                
-                                <!-- Actual image -->
-                                <Image x:Name="FrontFaceImage" 
-                                       Source="{Binding FrontFaceImage}" 
+
+								<!-- Actual image -->
+								<Image x:Name="FrontFaceImage"
+                                       Source="{Binding FrontFaceImage}"
                                        Stretch="Uniform"
                                        Margin="10"/>
-                            </Grid>
-                        </Border>
-                    </Grid>
-                </Border>
+							</Grid>
+						</Border>
+					</Grid>
+				</Border>
 
-                <!-- Back Face -->
-                <Border Grid.Row="2" BorderBrush="#34495e" BorderThickness="2" CornerRadius="5">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        
-                        <TextBlock Grid.Row="0" Text="BACK FACE" 
-                                   FontSize="16" FontWeight="Bold" 
+				<!-- Back Face -->
+				<Border Grid.Row="2" BorderBrush="#34495e" BorderThickness="2" CornerRadius="5">
+					<Grid>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="*"/>
+						</Grid.RowDefinitions>
+
+						<TextBlock Grid.Row="0" Text="BACK FACE"
+                                   FontSize="16" FontWeight="Bold"
                                    Padding="10" Background="#ecf0f1"
                                    HorizontalAlignment="Stretch"/>
-                        
-                        <Border Grid.Row="1" Background="#ecf0f1" Margin="2">
-                            <Grid>
-                                <!-- Placeholder when no image -->
-                                <TextBlock Text="No Image" 
-                                           FontSize="18" 
+
+						<Border Grid.Row="1" Background="#ecf0f1" Margin="2">
+							<Grid>
+								<!-- Placeholder when no image -->
+								<TextBlock Text="No Image"
+                                           FontSize="18"
                                            Foreground="#95a5a6"
-                                           HorizontalAlignment="Center" 
+                                           HorizontalAlignment="Center"
                                            VerticalAlignment="Center"
                                            Visibility="{Binding BackFacePlaceholderVisible}"/>
-                                
-                                <!-- Actual image -->
-                                <Image x:Name="BackFaceImage" 
-                                       Source="{Binding BackFaceImage}" 
+
+								<!-- Actual image -->
+								<Image x:Name="BackFaceImage"
+                                       Source="{Binding BackFaceImage}"
                                        Stretch="Uniform"
                                        Margin="10"/>
-                            </Grid>
-                        </Border>
-                    </Grid>
-                </Border>
-            </Grid>
+							</Grid>
+						</Border>
+					</Grid>
+				</Border>
+			</Grid>
 
-            <!-- Right Panel - Data -->
-            <Grid Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+			<!-- Right Panel - Data -->
+			<Grid Grid.Column="2">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
 
-                <!-- Data Section Header -->
-                <TextBlock Grid.Row="0" Text="ID CARD DATA" 
-                           FontSize="16" FontWeight="Bold" 
+				<!-- Data Section Header -->
+				<TextBlock Grid.Row="0" Text="ID CARD DATA"
+                           FontSize="16" FontWeight="Bold"
                            Padding="10" Background="#ecf0f1"
                            Margin="0,0,0,10"/>
 
-                <!-- Data Fields -->
-                <Border Grid.Row="1" BorderBrush="#34495e" BorderThickness="2" CornerRadius="5">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="15" IsEnabled="{Binding HasData}">
-                            <!-- National ID -->
-                            <TextBlock Text="National ID Number" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding NationalId, Mode=TwoWay}" 
+				<!-- Data Fields -->
+				<Border Grid.Row="1" BorderBrush="#34495e" BorderThickness="2" CornerRadius="5">
+					<ScrollViewer VerticalScrollBarVisibility="Auto">
+						<StackPanel Margin="15" IsEnabled="{Binding HasData}">
+							<!-- National ID -->
+							<TextBlock Text="National ID Number" FontWeight="SemiBold" Margin="0,0,0,5"/>
+							<TextBox Text="{Binding NationalId, Mode=TwoWay}"
                                      Padding="8" Margin="0,0,0,15" FontSize="14"
                                      Background="#f8f9fa"/>
 
-                            <!-- First Name -->
-                            <TextBlock Text="First Name (الاسم)" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding FirstName, Mode=TwoWay}" 
-                                     Padding="8" Margin="0,0,0,15" FontSize="14"
-                                     FlowDirection="RightToLeft"
-                                     Background="#f8f9fa"/>
-
-                            <!-- Father Name -->
-                            <TextBlock Text="Father Name (اسم الأب)" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding FatherName, Mode=TwoWay}" 
+							<!-- First Name -->
+							<TextBlock Text="First Name (الاسم)" FontWeight="SemiBold" Margin="0,0,0,5"/>
+							<TextBox Text="{Binding FirstName, Mode=TwoWay}"
                                      Padding="8" Margin="0,0,0,15" FontSize="14"
                                      FlowDirection="RightToLeft"
                                      Background="#f8f9fa"/>
 
-                            <!-- Mother Name -->
-                            <TextBlock Text="Mother Name (اسم الأم)" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding MotherName, Mode=TwoWay}" 
+							<!-- Father Name -->
+							<TextBlock Text="Father Name (اسم الأب)" FontWeight="SemiBold" Margin="0,0,0,5"/>
+							<TextBox Text="{Binding FatherName, Mode=TwoWay}"
                                      Padding="8" Margin="0,0,0,15" FontSize="14"
                                      FlowDirection="RightToLeft"
                                      Background="#f8f9fa"/>
 
-                            <!-- Last Name -->
-                            <TextBlock Text="Last Name (الكنية)" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding LastName, Mode=TwoWay}" 
+							<!-- Mother Name -->
+							<TextBlock Text="Mother Name (اسم الأم)" FontWeight="SemiBold" Margin="0,0,0,5"/>
+							<TextBox Text="{Binding MotherName, Mode=TwoWay}"
                                      Padding="8" Margin="0,0,0,15" FontSize="14"
                                      FlowDirection="RightToLeft"
                                      Background="#f8f9fa"/>
 
-                            <!-- Birth Info -->
-                            <TextBlock Text="Place and Date of Birth" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding BirthInfo, Mode=TwoWay}" 
+							<!-- Last Name -->
+							<TextBlock Text="Last Name (الكنية)" FontWeight="SemiBold" Margin="0,0,0,5"/>
+							<TextBox Text="{Binding LastName, Mode=TwoWay}"
                                      Padding="8" Margin="0,0,0,15" FontSize="14"
                                      FlowDirection="RightToLeft"
                                      Background="#f8f9fa"/>
 
-                            <!-- Scanned At -->
-                            <TextBlock Text="Scanned At" FontWeight="SemiBold" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding ScannedAt, Mode=TwoWay}" 
+							<!-- Birth Info -->
+							<TextBlock Text="Place and Date of Birth" FontWeight="SemiBold" Margin="0,0,0,5"/>
+							<TextBox Text="{Binding BirthInfo, Mode=TwoWay}"
+                                     Padding="8" Margin="0,0,0,15" FontSize="14"
+                                     FlowDirection="RightToLeft"
+                                     Background="#f8f9fa"/>
+
+							<!-- Scanned At -->
+							<TextBlock Text="Scanned At" FontWeight="SemiBold" Margin="0,0,0,5"/>
+							<TextBox Text="{Binding ScannedAt, Mode=TwoWay}"
                                      Padding="8" Margin="0,0,0,0" FontSize="14"
                                      Background="#f8f9fa" IsReadOnly="True"/>
-                        </StackPanel>
-                    </ScrollViewer>
-                </Border>
+						</StackPanel>
+					</ScrollViewer>
+				</Border>
 
-                <!-- Status Message -->
-                <Border Grid.Row="2" 
-                        Background="{Binding StatusBackground}" 
-                        Padding="10" 
-                        CornerRadius="5" 
+				<!-- Status Message -->
+				<Border Grid.Row="2"
+                        Background="{Binding StatusBackground}"
+                        Padding="10"
+                        CornerRadius="5"
                         Margin="0,10,0,0"
                         Visibility="{Binding StatusVisible}">
-                    <TextBlock Text="{Binding StatusMessage}" 
-                               FontSize="14" 
+					<TextBlock Text="{Binding StatusMessage}"
+                               FontSize="14"
                                Foreground="White"
                                TextWrapping="Wrap"
                                FontWeight="SemiBold"/>
-                </Border>
-            </Grid>
-        </Grid>
+				</Border>
+			</Grid>
+		</Grid>
 
-        <!-- Bottom Buttons -->
-        <Grid Grid.Row="2" Margin="0,20,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="10"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="10"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+		<!-- Bottom Buttons -->
+		<Grid Grid.Row="2" Margin="0,20,0,0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="10"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="10"/>
+				<ColumnDefinition Width="*"/>
+				<ColumnDefinition Width="10"/>
+				<ColumnDefinition Width="*"/>
+			</Grid.ColumnDefinitions>
 
-            <Button Grid.Column="0" 
-                    Content="SCAN" 
-                    FontSize="16" 
+			<Button Grid.Column="0"
+                    Content="SCAN"
+                    FontSize="16"
                     FontWeight="Bold"
                     Height="50"
                     Background="#27ae60"
@@ -206,35 +208,68 @@
                     Cursor="Hand"
                     Click="ScanButton_Click"
                     IsEnabled="{Binding IsScanEnabled}">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" 
+				<Button.Style>
+					<Style TargetType="Button">
+						<Setter Property="Template">
+							<Setter.Value>
+								<ControlTemplate TargetType="Button">
+									<Border Background="{TemplateBinding Background}"
                                             CornerRadius="5"
                                             BorderThickness="0">
-                                        <ContentPresenter HorizontalAlignment="Center" 
+										<ContentPresenter HorizontalAlignment="Center"
                                                         VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#2ecc71"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Background" Value="#95a5a6"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-            </Button>
+									</Border>
+								</ControlTemplate>
+							</Setter.Value>
+						</Setter>
+						<Style.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter Property="Background" Value="#2ecc71"/>
+							</Trigger>
+							<Trigger Property="IsEnabled" Value="False">
+								<Setter Property="Background" Value="#95a5a6"/>
+							</Trigger>
+						</Style.Triggers>
+					</Style>
+				</Button.Style>
+			</Button>
 
-            <Button Grid.Column="2" 
-                    Content="RESET" 
-                    FontSize="16" 
+			<Button Grid.Column="2"
+                    Content="EXPORT"
+                    FontSize="16"
+                    FontWeight="Bold"
+                    Height="50"
+                    Background="#3498db"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Cursor="Hand"
+                    Click="ExportButton_Click">
+				<Button.Style>
+					<Style TargetType="Button">
+						<Setter Property="Template">
+							<Setter.Value>
+								<ControlTemplate TargetType="Button">
+									<Border Background="{TemplateBinding Background}"
+                                            CornerRadius="5"
+                                            BorderThickness="0">
+										<ContentPresenter HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"/>
+									</Border>
+								</ControlTemplate>
+							</Setter.Value>
+						</Setter>
+						<Style.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter Property="Background" Value="#2980b9"/>
+							</Trigger>
+						</Style.Triggers>
+					</Style>
+				</Button.Style>
+			</Button>
+
+			<Button Grid.Column="4"
+                    Content="RESET"
+                    FontSize="16"
                     FontWeight="Bold"
                     Height="50"
                     Background="#f39c12"
@@ -242,32 +277,32 @@
                     BorderThickness="0"
                     Cursor="Hand"
                     Click="ResetButton_Click">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" 
+				<Button.Style>
+					<Style TargetType="Button">
+						<Setter Property="Template">
+							<Setter.Value>
+								<ControlTemplate TargetType="Button">
+									<Border Background="{TemplateBinding Background}"
                                             CornerRadius="5"
                                             BorderThickness="0">
-                                        <ContentPresenter HorizontalAlignment="Center" 
+										<ContentPresenter HorizontalAlignment="Center"
                                                         VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#e67e22"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-            </Button>
+									</Border>
+								</ControlTemplate>
+							</Setter.Value>
+						</Setter>
+						<Style.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter Property="Background" Value="#e67e22"/>
+							</Trigger>
+						</Style.Triggers>
+					</Style>
+				</Button.Style>
+			</Button>
 
-            <Button Grid.Column="4" 
-                    Content="CANCEL" 
-                    FontSize="16" 
+			<Button Grid.Column="6"
+                    Content="CANCEL"
+                    FontSize="16"
                     FontWeight="Bold"
                     Height="50"
                     Background="#e74c3c"
@@ -275,28 +310,28 @@
                     BorderThickness="0"
                     Cursor="Hand"
                     Click="CancelButton_Click">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Button">
-                                    <Border Background="{TemplateBinding Background}" 
+				<Button.Style>
+					<Style TargetType="Button">
+						<Setter Property="Template">
+							<Setter.Value>
+								<ControlTemplate TargetType="Button">
+									<Border Background="{TemplateBinding Background}"
                                             CornerRadius="5"
                                             BorderThickness="0">
-                                        <ContentPresenter HorizontalAlignment="Center" 
+										<ContentPresenter HorizontalAlignment="Center"
                                                         VerticalAlignment="Center"/>
-                                    </Border>
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#c0392b"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-            </Button>
-        </Grid>
-    </Grid>
+									</Border>
+								</ControlTemplate>
+							</Setter.Value>
+						</Setter>
+						<Style.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter Property="Background" Value="#c0392b"/>
+							</Trigger>
+						</Style.Triggers>
+					</Style>
+				</Button.Style>
+			</Button>
+		</Grid>
+	</Grid>
 </Window>

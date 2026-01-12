@@ -1,0 +1,17 @@
+﻿=== SYRIAN ID CARD - RAW FIELDS ===
+
+Total Fields: 13
+
+Field [00]: سعد
+Field [01]: الابيض
+Field [02]: حسن
+Field [03]: وضحه الحماده
+Field [04]: الحسكه 10-2-2003
+Field [05]: 08020094366
+Field [06]: LÒÍ"ÌÃÃÐ,Ê0ÑÃÃÃÃÃÃ ÈÃÎÃÔ ZÃXV6;o[Û[åK{-å(TåBSq4
+Field [07]: æ*lÊ
+Field [08]: `såE2Õ_á/]áØÚ86&,áy6YÝ}HìÂ@zVD@LÞÌ>ÐæQ
+Field [09]: YQhìmV?;KimyoÄyr5=Ñ(<[sßKUnÐ2Ñ9f{IXoq\(o+6Y >'3TOJ!SÑ`ÃæPäÞ6OP+ ,
+Field [10]: -Ñ6å2ÙÓQ[TuÆaSå?)(TÙgBXl5,q}UÍeLÃg
+Field [11]: ØAæí9:PÂS*:f+Ô6fÍp*p|"Ï5nÐCflÄwVlGmaeÒØÎq2!ÃF$Ã~Ö`eB,ÝÙæ0E:ÓÛ)_g1XUã@F
+Field [12]: =P?Â[LC}Áq,Ir}F~9FYO*$PvSz*+ÁbHÁ:?Ø$,<T@?ØÕÍko7):4Äc?T{4ÝsÐ'ÕÙ@sØ&s[&$ÚvÁÆågBMt*4qTAZÒyRJ= tRvRlKY:$BÊ)NW++AoaRg^J0ÙËe^ÌkRy(uÐ7uÕ{[?'ÃlÊyRr %InKÎåKPz(U8ÆFU|^åÊ5wÝ,Þä%UäTÞæ9Ëq5Ìp=U)jAÑ=]ÚUÐIíL!ËS5ÓÕ3ã,RÆ/æÆ'ÕíÖ$UTÙ4AO-ágVo9Ou):Dpáå 'F|y(sDÖí3ÖgÍ3859>?>4408?=8;?;274>>?5;31;?>1:

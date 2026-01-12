@@ -6,6 +6,7 @@ using Plustek.ViewModels;
 using Plustek.Views;
 using System;
 using System.Runtime.InteropServices;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Plustek {
     class Program {
@@ -59,6 +60,8 @@ namespace Plustek {
             services.AddSingleton<IBarcodeDecoder, BarcodeDecoderService>();
             services.AddSingleton<IScanner, ScannerService>();
             services.AddSingleton<IOutputWriter, OutputWriterService>();
+            services.AddSingleton<ExcelDatabaseService>(); // ADD THIS LINE
+
 
             // Console Runner
             services.AddTransient<ScannerRunner>();

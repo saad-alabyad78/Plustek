@@ -31,6 +31,7 @@
 		<PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1" />
+		<PackageReference Include="ClosedXML" Version="0.102.1" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\BarcodeReader\BarcodeIdScan.csproj" />

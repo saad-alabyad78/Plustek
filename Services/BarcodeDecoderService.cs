@@ -20,45 +20,78 @@ namespace Plustek.Services {
 
         public async Task<BarcodeResult?> ReadAsync(string imagePath) {
             try {
-                var result = await Task.Run(() =>
-                    _sdkReader.ReadBarcode(
-                        imagePath,
-                        _settings.BarcodeType,
-                        _settings.BarcodePageNumber
-                    )
+                var result = await _sdkReader.ReadBarcodeAsync(
+                    imagePath,
+                    _settings.BarcodeType,
+                    _settings.BarcodePageNumber
                 );
 
                 if (!result.Success) {
                     return null;
                 }
 
-                Console.WriteLine($"[DEBUG] Base64 length: {result.DataBase64?.Length ?? 0}");
-
-                // Decode base64 with ISO-8859-1 encoding (for Arabic text)
-                string decodedText = DecodeBase64ToISO(result.DataBase64 ?? string.Empty);
-
-                Console.WriteLine($"[DEBUG] Decoded text length: {decodedText.Length}");
-                Console.WriteLine($"[DEBUG] First 100 chars: {decodedText.Substring(0, Math.Min(100, decodedText.Length))}");
-
-                if (string.IsNullOrEmpty(decodedText)) {
-                    // Fallback to Text property if it exists
-                    decodedText = result.Text ?? string.Empty;
-                }
-
-                if (string.IsNullOrEmpty(decodedText)) {
-                    return null;
-                }
-
-                return new BarcodeResult {
-                    Text = decodedText,
-                    Type = result.Type ?? "PDF417",
-                    Length = decodedText.Length
-                };
+                return ProcessBarcodeResult(result);
             }
             catch (Exception ex) {
                 Console.WriteLine($"Barcode read error: {ex.Message}");
                 return null;
             }
+        }
+
+        public async Task<BarcodeResult?> ReadBarcodeWithEnhancementAsync(
+            string? imagePath = null,
+            EnhancementTechnique[]? enhancements = null) {
+
+            try {
+                var result = await _sdkReader.ReadBarcodeWithEnhancementAsync(
+                    imagePath,
+                    enhancements,
+                    _settings.BarcodeType,
+                    _settings.BarcodePageNumber
+                );
+
+                if (!result.Success) {
+                    return null;
+                }
+
+                return ProcessBarcodeResult(result);
+            }
+            catch (Exception ex) {
+                Console.WriteLine($"Barcode read with enhancement error: {ex.Message}");
+                return null;
+            }
+        }
+
+        private BarcodeResult? ProcessBarcodeResult(BarcodeReadResult result) {
+            Console.WriteLine($"[DEBUG] Base64 length: {result.DataBase64?.Length ?? 0}");
+
+            // Decode base64 with ISO-8859-1 encoding (for Arabic text)
+            string decodedText = DecodeBase64ToISO(result.DataBase64 ?? string.Empty);
+
+            Console.WriteLine($"[DEBUG] Decoded text length: {decodedText.Length}");
+            Console.WriteLine($"[DEBUG] First 100 chars: {decodedText.Substring(0, Math.Min(100, decodedText.Length))}");
+
+            if (string.IsNullOrEmpty(decodedText)) {
+                // Fallback to Text property if it exists
+                decodedText = result.Text ?? string.Empty;
+            }
+
+            if (string.IsNullOrEmpty(decodedText)) {
+                return null;
+            }
+
+            var barcodeResult = new BarcodeResult {
+                Text = decodedText,
+                Type = result.Type ?? "PDF417",
+                Length = decodedText.Length
+            };
+
+            // Add enhancement info if available
+            if (!string.IsNullOrEmpty(result.SuccessfulEnhancement)) {
+                Console.WriteLine($"[DEBUG] Enhancement used: {result.SuccessfulEnhancement}");
+            }
+
+            return barcodeResult;
         }
 
         private string DecodeBase64ToISO(string base64Data) {

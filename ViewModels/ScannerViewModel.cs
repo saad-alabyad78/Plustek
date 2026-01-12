@@ -1,6 +1,8 @@
-﻿using Plustek.Configuration;
+﻿using BarcodeIdScan;
+using Plustek.Configuration;
 using Plustek.Interfaces;
 using Plustek.Parsers;
+using Plustek.Services;
 using System;
 using System.ComponentModel;
 using System.IO;
@@ -17,6 +19,7 @@ namespace Plustek.ViewModels {
         private readonly IScanner _scanner;
         private readonly IBarcodeDecoder _barcodeDecoder;
         private readonly IOutputWriter _outputWriter;
+        private readonly ExcelDatabaseService _excelDatabase;
 
         private BitmapImage? _frontFaceImage;
         private BitmapImage? _backFaceImage;
@@ -35,16 +38,19 @@ namespace Plustek.ViewModels {
         private string? _currentNationalId;
         private string? _frontFacePath;
         private string? _backFacePath;
+        private bool _backFaceComplete = false; // Track if back face is scanned
 
         public ScannerViewModel(
             AppSettings settings,
             IScanner scanner,
             IBarcodeDecoder barcodeDecoder,
-            IOutputWriter outputWriter) {
+            IOutputWriter outputWriter,
+            ExcelDatabaseService excelDatabase) {
             _settings = settings;
             _scanner = scanner;
             _barcodeDecoder = barcodeDecoder;
             _outputWriter = outputWriter;
+            _excelDatabase = excelDatabase;
         }
 
         // Properties
@@ -184,7 +190,7 @@ namespace Plustek.ViewModels {
                 }
 
                 IsScanEnabled = true;
-                ShowStatus("✓ Scanner ready. Press SCAN to begin.", WpfBrushes.Green);
+                ShowStatus("✓ Scanner ready. Please scan the BACK face first (with barcode).", WpfBrushes.Green);
             }
             catch (Exception ex) {
                 ShowStatus($"❌ Error: {ex.Message}", WpfBrushes.Red);
@@ -209,14 +215,53 @@ namespace Plustek.ViewModels {
                 }
 
                 // Try to read barcode
+                ShowStatus("🔍 Reading barcode...", WpfBrushes.Orange);
                 var barcode = await _barcodeDecoder.ReadAsync(tempPath);
 
+                // Try enhancement if first attempt fails
                 if (barcode == null) {
-                    // No barcode = FRONT FACE
-                    HandleFrontFaceAsync(tempPath);
+                    ShowStatus("🔍 No barcode detected, trying with enhancement...", WpfBrushes.Orange);
+
+                    // Small delay to ensure status is visible
+
+                    barcode = await _barcodeDecoder.ReadBarcodeWithEnhancementAsync(
+                        imagePath: tempPath,
+                        enhancements: new[] { EnhancementTechnique.Sharpening }
+                    );
+
+                    if (barcode != null) {
+                        ShowStatus("✓ Barcode detected with enhancement!", WpfBrushes.Green);
+                    }
+                }
+
+                if (!_backFaceComplete) {
+                    // STEP 1: We need the BACK face with barcode first
+                    if (barcode == null) {
+                        // No barcode found - wrong side or error
+                        ShowStatus("❌ No barcode detected. Please scan the BACK face (with barcode).", WpfBrushes.Red);
+
+                        // Clean up temp file
+                        if (File.Exists(tempPath)) {
+                            try { File.Delete(tempPath); } catch { }
+                        }
+                    } else {
+                        // Barcode found - this is the BACK face
+                        await HandleBackFaceAsync(tempPath, barcode.Text);
+                    }
                 } else {
-                    // Barcode found = BACK FACE
-                    await HandleBackFaceAsync(tempPath, barcode.Text);
+                    // STEP 2: We have back face, now get the FRONT face
+                    if (barcode != null) {
+                        // Barcode found - wrong side
+                        ShowStatus("❌ This appears to be the back face. Please scan the FRONT face (without barcode).", WpfBrushes.Red);
+
+                        // Clean up temp file
+                        if (File.Exists(tempPath)) {
+                            try { File.Delete(tempPath); } catch { }
+                        }
+                    } else {
+                        // No barcode = FRONT face - this is what we want
+                        await HandleFrontFaceAsync(tempPath);
+                    }
                 }
             }
             catch (Exception ex) {
@@ -224,31 +269,6 @@ namespace Plustek.ViewModels {
             }
             finally {
                 IsScanEnabled = true;
-            }
-        }
-
-        private void HandleFrontFaceAsync(string tempPath) {
-            if (string.IsNullOrEmpty(_currentNationalId)) {
-                // No National ID yet, just store temporarily
-                _frontFacePath = tempPath;
-                FrontFaceImage = LoadImage(tempPath);
-                ShowStatus("✓ Front face scanned. Please scan the BACK face to extract data.", WpfBrushes.Blue);
-            } else {
-                // We have National ID, save properly
-                string frontPath = _settings.GetFrontFacePath(_currentNationalId);
-
-                if (File.Exists(tempPath)) {
-                    File.Move(tempPath, frontPath, overwrite: true);
-                }
-
-                _frontFacePath = frontPath;
-                FrontFaceImage = LoadImage(frontPath);
-
-                if (string.IsNullOrEmpty(_backFacePath)) {
-                    ShowStatus("✓ Front face saved. Please scan the BACK face to extract data.", WpfBrushes.Blue);
-                } else {
-                    ShowStatus("✓ Front face saved. Both faces complete!", WpfBrushes.Green);
-                }
             }
         }
 
@@ -264,6 +284,9 @@ namespace Plustek.ViewModels {
                 // Still save as back face
                 _backFacePath = tempPath;
                 BackFaceImage = LoadImage(tempPath);
+                _backFaceComplete = true;
+
+                ShowStatus("⚠ Back face saved but data parsing failed. Please scan the FRONT face.", WpfBrushes.Orange);
                 return;
             }
 
@@ -274,10 +297,14 @@ namespace Plustek.ViewModels {
                 ShowStatus("❌ Could not extract National ID number.", WpfBrushes.Red);
                 _backFacePath = tempPath;
                 BackFaceImage = LoadImage(tempPath);
+                _backFaceComplete = true;
+
+                ShowStatus("⚠ Back face saved but no National ID found. Please scan the FRONT face.", WpfBrushes.Orange);
                 return;
             }
 
             _currentNationalId = nationalId;
+            _backFaceComplete = true;
 
             // Save back face
             string backPath = _settings.GetBackFacePath(nationalId);
@@ -286,16 +313,6 @@ namespace Plustek.ViewModels {
             }
             _backFacePath = backPath;
             BackFaceImage = LoadImage(backPath);
-
-            // Move front face if it exists
-            if (!string.IsNullOrEmpty(_frontFacePath) && File.Exists(_frontFacePath)) {
-                string frontPath = _settings.GetFrontFacePath(nationalId);
-                if (_frontFacePath != frontPath) {
-                    File.Move(_frontFacePath, frontPath, overwrite: true);
-                    _frontFacePath = frontPath;
-                    FrontFaceImage = LoadImage(frontPath);
-                }
-            }
 
             // Extract and populate individual fields
             NationalId = nationalId;
@@ -310,11 +327,75 @@ namespace Plustek.ViewModels {
             // Save outputs
             await _outputWriter.SaveAsync(idData, backPath);
 
-            if (FrontFaceImage is null) {
-                ShowStatus($"✓ Back face and data saved. National ID: {nationalId}. Please scan the FRONT face.", WpfBrushes.Blue);
-            } else {
-                ShowStatus($"✓ Complete! Both faces and data saved. National ID: {nationalId}", WpfBrushes.Green);
+            // Save to Excel database
+            await _excelDatabase.SaveRecordAsync(idData, null, backPath);
+
+            ShowStatus($"✓ Back face and data saved. National ID: {nationalId}. Now scan the FRONT face.", WpfBrushes.Blue);
+        }
+
+        private async Task HandleFrontFaceAsync(string tempPath) {
+            if (string.IsNullOrEmpty(_currentNationalId)) {
+                // This shouldn't happen in the new flow, but handle it
+                ShowStatus("❌ Error: Back face must be scanned first.", WpfBrushes.Red);
+
+                if (File.Exists(tempPath)) {
+                    try { File.Delete(tempPath); } catch { }
+                }
+                return;
             }
+
+            // Save front face with the National ID we already have
+            string frontPath = _settings.GetFrontFacePath(_currentNationalId);
+
+            if (File.Exists(tempPath)) {
+                File.Move(tempPath, frontPath, overwrite: true);
+            }
+
+            _frontFacePath = frontPath;
+            FrontFaceImage = LoadImage(frontPath);
+
+            // Update database with front face path
+            if (HasData) {
+                var idData = new Models.SyrianIdData {
+                    Fields = new System.Collections.Generic.List<string> {
+                        FirstName ?? "",
+                        LastName ?? "",
+                        FatherName ?? "",
+                        MotherName ?? "",
+                        BirthInfo ?? "",
+                        NationalId ?? ""
+                    }
+                };
+                await _excelDatabase.SaveRecordAsync(idData, frontPath, _backFacePath);
+            }
+
+            ShowStatus($"✓ Complete! Both faces saved. National ID: {_currentNationalId}", WpfBrushes.Green);
+        }
+
+        public async Task<string?> ExportDatabaseAsync() {
+            try {
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var exportPath = Path.Combine(_settings.OutputDirectory, $"SyrianID_Export_{timestamp}.xlsx");
+
+                ShowStatus("📤 Exporting database...", WpfBrushes.Orange);
+
+                await _excelDatabase.ExportDatabaseAsync(exportPath);
+
+                var recordCount = await _excelDatabase.GetRecordCountAsync();
+                ShowStatus($"✓ Database exported! {recordCount} records saved to: {Path.GetFileName(exportPath)}", WpfBrushes.Green);
+
+                return exportPath;
+            }
+            catch (Exception ex) {
+                ShowStatus($"❌ Export failed: {ex.Message}", WpfBrushes.Red);
+                return null;
+            }
+        }
+
+        public async Task<string> GetDatabaseInfoAsync() {
+            var recordCount = await _excelDatabase.GetRecordCountAsync();
+            var dbPath = _excelDatabase.GetDatabasePath();
+            return $"{recordCount} records in database\n{dbPath}";
         }
 
         public void Reset() {
@@ -331,7 +412,8 @@ namespace Plustek.ViewModels {
             _currentNationalId = null;
             _frontFacePath = null;
             _backFacePath = null;
-            ShowStatus("🔄 Reset complete. Ready for new scan.", WpfBrushes.Gray);
+            _backFaceComplete = false;
+            ShowStatus("🔄 Reset complete. Please scan the BACK face first (with barcode).", WpfBrushes.Gray);
         }
 
         public async Task CleanupAsync() {

@@ -34,7 +34,7 @@ namespace Plustek.Configuration {
             BarcodeType = "pdf417";
             BarcodePageNumber = 103;
 
-            ScanTimeout = 30000;
+            ScanTimeout = 30000000;
             FileWaitDelay = 3000;
 
             Directory.CreateDirectory(OutputDirectory);
