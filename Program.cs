@@ -32,6 +32,7 @@ namespace Plustek {
 
             // Console modes - keep console visible
             ShowConsoleWindow();
+
             var runner = services.GetRequiredService<ScannerRunner>();
 
             return args[0].ToLower() switch {
@@ -46,7 +47,6 @@ namespace Plustek {
             var app = new System.Windows.Application();
             var viewModel = services.GetRequiredService<ScannerViewModel>();
             var mainWindow = new MainWindow(viewModel);
-
             return app.Run(mainWindow);
         }
 
@@ -56,12 +56,17 @@ namespace Plustek {
             // Settings
             services.AddSingleton<AppSettings>();
 
-            // Services
-            services.AddSingleton<IBarcodeDecoder, BarcodeDecoderService>();
-            services.AddSingleton<IScanner, ScannerService>();
-            services.AddSingleton<IOutputWriter, OutputWriterService>();
-            services.AddSingleton<ExcelDatabaseService>(); // ADD THIS LINE
+            // Scanner with auto-reconnect wrapper
+            services.AddSingleton<IScanner>(provider => {
+                var settings = provider.GetRequiredService<AppSettings>();
+                var baseScanner = new ScannerService(settings);
+                // Wrap with reconnect handler: maxRetries=3, retryDelayMs=2000
+                return new PlustekScannerWithReconnect(baseScanner, maxRetries: 3, retryDelayMs: 2000);
+            });
 
+            // Other Services
+            services.AddSingleton<IBarcodeDecoder, BarcodeDecoderService>();
+            services.AddSingleton<ExcelDatabaseService>();
 
             // Console Runner
             services.AddTransient<ScannerRunner>();
@@ -98,6 +103,13 @@ USAGE:
   PlustekScanner.exe --console      # Console interactive mode
   PlustekScanner.exe --scan         # Console single scan
   PlustekScanner.exe --test <path>  # Test image file
+
+FEATURES:
+  ✓ Automatic reconnection on handshake errors
+  ✓ Connection staleness detection (2-minute timeout)
+  ✓ Excel database with front/back face paths
+  ✓ Image enhancement (sharpening) for difficult barcodes
+  ✓ Device authorization by serial number
 ");
             return 1;
         }

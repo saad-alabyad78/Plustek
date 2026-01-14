@@ -6,10 +6,12 @@ using Plustek.Services;
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using Microsoft.Win32;
 using WpfBrush = System.Windows.Media.Brush;
 using WpfBrushes = System.Windows.Media.Brushes;
 
@@ -18,7 +20,6 @@ namespace Plustek.ViewModels {
         private readonly AppSettings _settings;
         private readonly IScanner _scanner;
         private readonly IBarcodeDecoder _barcodeDecoder;
-        private readonly IOutputWriter _outputWriter;
         private readonly ExcelDatabaseService _excelDatabase;
 
         private BitmapImage? _frontFaceImage;
@@ -44,12 +45,10 @@ namespace Plustek.ViewModels {
             AppSettings settings,
             IScanner scanner,
             IBarcodeDecoder barcodeDecoder,
-            IOutputWriter outputWriter,
             ExcelDatabaseService excelDatabase) {
             _settings = settings;
             _scanner = scanner;
             _barcodeDecoder = barcodeDecoder;
-            _outputWriter = outputWriter;
             _excelDatabase = excelDatabase;
         }
 
@@ -189,11 +188,37 @@ namespace Plustek.ViewModels {
                     return;
                 }
 
+                // Verify device authorization
+                ShowStatus("Verifying device authorization...", WpfBrushes.Orange);
+                string? serialNumber = await _scanner.GetDeviceSerialNumberAsync();
+
+                if (string.IsNullOrEmpty(serialNumber)) {
+                    ShowStatus("❌ Could not retrieve device serial number.", WpfBrushes.Red);
+                    return;
+                }
+
+                // Check if serial number matches the authorized device
+                const string AUTHORIZED_SERIAL = "kj01010f6001115";
+
+                if (serialNumber != AUTHORIZED_SERIAL) {
+                    ShowStatus($"❌ UNAUTHORIZED DEVICE", WpfBrushes.Red);
+                    /* MessageBox.Show(
+                         $"This device is not authorized to use this application.\n\n" +
+                         $"Device Serial: {serialNumber}\n" +
+                         $"Expected Serial: {AUTHORIZED_SERIAL}",
+                         "Unauthorized Device",
+                         MessageBoxButton.OK,
+                         MessageBoxImage.Error
+                     );*/
+                    return;
+                }
+
                 IsScanEnabled = true;
-                ShowStatus("✓ Scanner ready. Please scan the BACK face first (with barcode).", WpfBrushes.Green);
+                ShowStatus($"✓ Scanner ready . Please scan the BACK face first (with barcode).", WpfBrushes.Green);
             }
             catch (Exception ex) {
                 ShowStatus($"❌ Error: {ex.Message}", WpfBrushes.Red);
+                MessageBox.Show($"Error initializing scanner:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -214,28 +239,25 @@ namespace Plustek.ViewModels {
                     return;
                 }
 
-                // Try to read barcode
-                ShowStatus("🔍 Reading barcode...", WpfBrushes.Orange);
-                var barcode = await _barcodeDecoder.ReadAsync(tempPath);
-
-                // Try enhancement if first attempt fails
-                if (barcode == null) {
-                    ShowStatus("🔍 No barcode detected, trying with enhancement...", WpfBrushes.Orange);
-
-                    // Small delay to ensure status is visible
-
-                    barcode = await _barcodeDecoder.ReadBarcodeWithEnhancementAsync(
-                        imagePath: tempPath,
-                        enhancements: new[] { EnhancementTechnique.Sharpening }
-                    );
-
-                    if (barcode != null) {
-                        ShowStatus("✓ Barcode detected with enhancement!", WpfBrushes.Green);
-                    }
-                }
-
                 if (!_backFaceComplete) {
                     // STEP 1: We need the BACK face with barcode first
+                    ShowStatus("🔍 Reading barcode...", WpfBrushes.Orange);
+
+                    var barcode = await _barcodeDecoder.ReadAsync(tempPath);
+
+                    // Try enhancement if first attempt fails
+                    if (barcode == null) {
+                        ShowStatus("🔍 No barcode detected, trying with enhancement...", WpfBrushes.Orange);
+                        barcode = await _barcodeDecoder.ReadBarcodeWithEnhancementAsync(
+                            imagePath: tempPath,
+                            enhancements: new[] { EnhancementTechnique.Sharpening }
+                        );
+
+                        if (barcode != null) {
+                            ShowStatus("✓ Barcode detected with enhancement!", WpfBrushes.Green);
+                        }
+                    }
+
                     if (barcode == null) {
                         // No barcode found - wrong side or error
                         ShowStatus("❌ No barcode detected. Please scan the BACK face (with barcode).", WpfBrushes.Red);
@@ -250,18 +272,10 @@ namespace Plustek.ViewModels {
                     }
                 } else {
                     // STEP 2: We have back face, now get the FRONT face
-                    if (barcode != null) {
-                        // Barcode found - wrong side
-                        ShowStatus("❌ This appears to be the back face. Please scan the FRONT face (without barcode).", WpfBrushes.Red);
-
-                        // Clean up temp file
-                        if (File.Exists(tempPath)) {
-                            try { File.Delete(tempPath); } catch { }
-                        }
-                    } else {
-                        // No barcode = FRONT face - this is what we want
-                        await HandleFrontFaceAsync(tempPath);
-                    }
+                    // NO BARCODE CHECK - just accept the scan as front face
+                    // User can press Reset button if they made a mistake
+                    ShowStatus("✓ Processing front face...", WpfBrushes.Orange);
+                    await HandleFrontFaceAsync(tempPath);
                 }
             }
             catch (Exception ex) {
@@ -324,8 +338,6 @@ namespace Plustek.ViewModels {
             ScannedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             HasData = true;
 
-            // Save outputs
-            await _outputWriter.SaveAsync(idData, backPath);
 
             // Save to Excel database
             await _excelDatabase.SaveRecordAsync(idData, null, backPath);
@@ -374,20 +386,77 @@ namespace Plustek.ViewModels {
 
         public async Task<string?> ExportDatabaseAsync() {
             try {
-                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                var exportPath = Path.Combine(_settings.OutputDirectory, $"SyrianID_Export_{timestamp}.xlsx");
+                // Show Save File Dialog
+                var saveFileDialog = new SaveFileDialog {
+                    Title = "Export Database and Images",
+                    Filter = "ZIP Archive (*.zip)|*.zip",
+                    FileName = $"SyrianID_Export_{DateTime.Now:yyyyMMdd_HHmmss}.zip",
+                    DefaultExt = "zip"
+                };
 
-                ShowStatus("📤 Exporting database...", WpfBrushes.Orange);
+                if (saveFileDialog.ShowDialog() != true) {
+                    ShowStatus("Export cancelled.", WpfBrushes.Gray);
+                    return null;
+                }
 
-                await _excelDatabase.ExportDatabaseAsync(exportPath);
+                string exportPath = saveFileDialog.FileName;
+
+                ShowStatus("📤 Exporting database and images...", WpfBrushes.Orange);
+
+                await Task.Run(() => {
+                    // Get the database directory
+                    string databaseDir = Path.GetDirectoryName(_excelDatabase.GetDatabasePath()) ?? _settings.OutputDirectory;
+
+                    // Create the ZIP file
+                    if (File.Exists(exportPath)) {
+                        File.Delete(exportPath);
+                    }
+
+                    using (var archive = ZipFile.Open(exportPath, ZipArchiveMode.Create)) {
+                        // Add the database file
+                        string dbPath = _excelDatabase.GetDatabasePath();
+                        if (File.Exists(dbPath)) {
+                            archive.CreateEntryFromFile(dbPath, Path.GetFileName(dbPath));
+                        }
+
+                        // Add all folders and their contents in the same directory as the database
+                        var directories = Directory.GetDirectories(databaseDir);
+
+                        foreach (var dir in directories) {
+                            var dirInfo = new DirectoryInfo(dir);
+
+                            // Get all files in this directory and subdirectories
+                            var files = Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories);
+
+                            foreach (var file in files) {
+                                // Create relative path for the archive
+                                string relativePath = Path.GetRelativePath(databaseDir, file);
+                                archive.CreateEntryFromFile(file, relativePath);
+                            }
+                        }
+                    }
+                });
 
                 var recordCount = await _excelDatabase.GetRecordCountAsync();
-                ShowStatus($"✓ Database exported! {recordCount} records saved to: {Path.GetFileName(exportPath)}", WpfBrushes.Green);
+                ShowStatus($"✓ Export complete! {recordCount} records and images saved to: {Path.GetFileName(exportPath)}", WpfBrushes.Green);
+
+         /*       // Ask if user wants to open the folder
+                var result = MessageBox.Show(
+                    $"Export successful!\n\nFile saved to:\n{exportPath}\n\nDo you want to open the folder?",
+                    "Export Complete",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Information
+                );
+
+                if (result == MessageBoxResult.Yes) {
+                    System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{exportPath}\"");
+                }*/
 
                 return exportPath;
             }
             catch (Exception ex) {
                 ShowStatus($"❌ Export failed: {ex.Message}", WpfBrushes.Red);
+                MessageBox.Show($"Export failed:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
         }

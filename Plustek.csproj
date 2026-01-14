@@ -41,4 +41,7 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </None>
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="scans\" />
+	</ItemGroup>
 </Project>

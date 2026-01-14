@@ -37,8 +37,8 @@ namespace Plustek.Services {
             worksheet.Cell(1, 5).Value = "Mother Name";
             worksheet.Cell(1, 6).Value = "Birth Info";
             worksheet.Cell(1, 7).Value = "Scanned At";
-            worksheet.Cell(1, 8).Value = "Front Face Path";
-            worksheet.Cell(1, 9).Value = "Back Face Path";
+            //worksheet.Cell(1, 8).Value = "Front Face Path";
+            //worksheet.Cell(1, 9).Value = "Back Face Path";
 
             // Style headers
             var headerRange = worksheet.Range(1, 1, 1, 9);
@@ -64,31 +64,53 @@ namespace Plustek.Services {
                     // Check if record already exists
                     var existingRow = FindRecordRow(worksheet, idData.NationalId);
 
-                    int row;
+                    bool shouldCreate = false;
+
                     if (existingRow > 0) {
-                        Console.WriteLine($"[ExcelDB] Updating existing record at row {existingRow}");
-                        row = existingRow;
+                        // Record exists, check if scanned at is older than 5 minutes
+                        var scannedAtCell = worksheet.Cell(existingRow, 7).GetString();
+
+                        if (DateTime.TryParse(scannedAtCell, out DateTime lastScannedAt)) {
+                            var fiveMinutesAgo = DateTime.Now.AddMinutes(-5);
+
+                            if (lastScannedAt < fiveMinutesAgo) {
+                                Console.WriteLine($"[ExcelDB] Last scan was more than 5 minutes ago ({lastScannedAt}). Creating new record.");
+                                shouldCreate = true;
+                            } else {
+                                Console.WriteLine($"[ExcelDB] Record was scanned recently ({lastScannedAt}). Skipping creation.");
+                                return;
+                            }
+                        } else {
+                            // If we can't parse the date, create a new record
+                            Console.WriteLine($"[ExcelDB] Could not parse scanned date. Creating new record.");
+                            shouldCreate = true;
+                        }
                     } else {
-                        Console.WriteLine($"[ExcelDB] Adding new record");
-                        row = worksheet.LastRowUsed().RowNumber() + 1;
+                        Console.WriteLine($"[ExcelDB] Record not found. Creating new record.");
+                        shouldCreate = true;
                     }
 
-                    // Fill data
-                    worksheet.Cell(row, 1).Value = idData.NationalId;
-                    worksheet.Cell(row, 2).Value = idData.FirstName;
-                    worksheet.Cell(row, 3).Value = idData.FatherName;
-                    worksheet.Cell(row, 4).Value = idData.LastName;
-                    worksheet.Cell(row, 5).Value = idData.MotherName;
-                    worksheet.Cell(row, 6).Value = idData.BirthInfo;
-                    worksheet.Cell(row, 7).Value = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                    worksheet.Cell(row, 8).Value = frontFacePath ?? "";
-                    worksheet.Cell(row, 9).Value = backFacePath ?? "";
+                    if (shouldCreate) {
+                        // Always add as new row (never update existing)
+                        int row = worksheet.LastRowUsed().RowNumber() + 1;
 
-                    // Auto-fit columns
-                    worksheet.Columns().AdjustToContents();
+                        // Fill data
+                        worksheet.Cell(row, 1).Value = idData.NationalId;
+                        worksheet.Cell(row, 2).Value = idData.FirstName;
+                        worksheet.Cell(row, 3).Value = idData.FatherName;
+                        worksheet.Cell(row, 4).Value = idData.LastName;
+                        worksheet.Cell(row, 5).Value = idData.MotherName;
+                        worksheet.Cell(row, 6).Value = idData.BirthInfo;
+                        worksheet.Cell(row, 7).Value = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        //worksheet.Cell(row, 8).Value = frontFacePath ?? "";
+                        //worksheet.Cell(row, 9).Value = backFacePath ?? "";
 
-                    workbook.Save();
-                    Console.WriteLine($"[ExcelDB] Record saved successfully");
+                        // Auto-fit columns
+                        worksheet.Columns().AdjustToContents();
+
+                        workbook.Save();
+                        Console.WriteLine($"[ExcelDB] Record saved successfully at row {row}");
+                    }
                 }
                 catch (Exception ex) {
                     Console.WriteLine($"[ExcelDB] ERROR saving record: {ex.Message}");
@@ -143,15 +165,30 @@ namespace Plustek.Services {
 
         private int FindRecordRow(IXLWorksheet worksheet, string nationalId) {
             var lastRow = worksheet.LastRowUsed().RowNumber();
+            int foundRow = 0;
+            DateTime latestScannedAt = DateTime.MinValue;
 
             for (int row = 2; row <= lastRow; row++) {
                 var cellValue = worksheet.Cell(row, 1).GetString();
                 if (cellValue == nationalId) {
-                    return row;
+                    // Found a matching National ID, check if it's the latest
+                    var scannedAtCell = worksheet.Cell(row, 7).GetString();
+
+                    if (DateTime.TryParse(scannedAtCell, out DateTime scannedAt)) {
+                        if (scannedAt > latestScannedAt) {
+                            latestScannedAt = scannedAt;
+                            foundRow = row;
+                        }
+                    } else {
+                        // If we can't parse the date, still consider this row if we haven't found any valid date yet
+                        if (foundRow == 0) {
+                            foundRow = row;
+                        }
+                    }
                 }
             }
 
-            return 0; // Not found
+            return foundRow; // Returns 0 if not found, or the row with the latest scanned date
         }
     }
 }

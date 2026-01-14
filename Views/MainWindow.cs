@@ -25,7 +25,7 @@ namespace Plustek.Views {
         private async void ExportButton_Click(object sender, RoutedEventArgs e) {
             var exportPath = await _viewModel.ExportDatabaseAsync();
 
-            if (exportPath != null && File.Exists(exportPath)) {
+            /* if (exportPath != null && File.Exists(exportPath)) {
                 var result = MessageBox.Show(
                     $"Database exported successfully!\n\n{exportPath}\n\nWould you like to open the file?",
                     "Export Complete",
@@ -49,7 +49,7 @@ namespace Plustek.Views {
                         );
                     }
                 }
-            }
+            } */
         }
 
         private void ResetButton_Click(object sender, RoutedEventArgs e) {

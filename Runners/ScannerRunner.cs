@@ -13,7 +13,6 @@ namespace Plustek.Runner {
         private readonly AppSettings _settings;
         private readonly IScanner _scanner;
         private readonly IBarcodeDecoder _barcodeDecoder;
-        private readonly IOutputWriter _outputWriter;
         private readonly ExcelDatabaseService _excelDatabase;
 
         private string? _currentNationalId = null;
@@ -24,12 +23,10 @@ namespace Plustek.Runner {
             AppSettings settings,
             IScanner scanner,
             IBarcodeDecoder barcodeDecoder,
-            IOutputWriter outputWriter,
             ExcelDatabaseService excelDatabase) {
             _settings = settings;
             _scanner = scanner;
             _barcodeDecoder = barcodeDecoder;
-            _outputWriter = outputWriter;
             _excelDatabase = excelDatabase;
         }
 
@@ -120,7 +117,6 @@ namespace Plustek.Runner {
             }
 
             DisplayResults(idData);
-            await _outputWriter.SaveAsync(idData, imagePath);
 
             return 0;
         }
@@ -148,7 +144,36 @@ namespace Plustek.Runner {
                 }
                 Console.WriteLine("✓");
 
+                // Verify device authorization
+                Console.Write("Verifying device authorization... ");
+                string? serialNumber = await _scanner.GetDeviceSerialNumberAsync();
+
+                if (string.IsNullOrEmpty(serialNumber)) {
+                    Console.WriteLine("✗ Failed");
+                    Console.WriteLine("\n❌ Could not retrieve device serial number.");
+                    return false;
+                }
+
+                // Check if serial number matches the authorized device
+                const string AUTHORIZED_SERIAL = "kj01010f6001115";
+
+                if (serialNumber != AUTHORIZED_SERIAL) {
+                    Console.WriteLine("✗ Failed");
+                    Console.WriteLine($"\n❌ UNAUTHORIZED DEVICE");
+                    Console.WriteLine($"Device Serial: {serialNumber}");
+                    Console.WriteLine($"Expected Serial: {AUTHORIZED_SERIAL}");
+                    Console.WriteLine("This device is not authorized to use this application.");
+                    throw new UnauthorizedAccessException($"Unauthorized device with serial number: {serialNumber}");
+                }
+
+                Console.WriteLine("✓");
+                Console.WriteLine($"Device Serial: {serialNumber}");
+
                 return true;
+            }
+            catch (UnauthorizedAccessException) {
+                // Re-throw authorization exceptions
+                throw;
             }
             catch (Exception ex) {
                 Console.WriteLine($"\n❌ Error: {ex.Message}");
@@ -168,20 +193,21 @@ namespace Plustek.Runner {
             }
 
             Console.WriteLine("✓ Scan complete");
-            Console.Write("🔍 Reading barcode... ");
-
-            var barcode = await _barcodeDecoder.ReadAsync(outputPath);
-
-            if (barcode == null) {
-                Console.Write("Trying with enhancement... ");
-                barcode = await _barcodeDecoder.ReadBarcodeWithEnhancementAsync(
-                    imagePath: outputPath,
-                    enhancements: new[] { EnhancementTechnique.Sharpening }
-                );
-            }
 
             if (!_backFaceComplete) {
                 // STEP 1: We need the BACK face with barcode first
+                Console.Write("🔍 Reading barcode... ");
+
+                var barcode = await _barcodeDecoder.ReadAsync(outputPath);
+
+                if (barcode == null) {
+                    Console.Write("Trying with enhancement... ");
+                    barcode = await _barcodeDecoder.ReadBarcodeWithEnhancementAsync(
+                        imagePath: outputPath,
+                        enhancements: new[] { EnhancementTechnique.Sharpening }
+                    );
+                }
+
                 if (barcode == null) {
                     Console.WriteLine("❌ No barcode detected");
                     Console.WriteLine("⚠️  Please scan the BACK face of the ID card (the side with the barcode).");
@@ -198,19 +224,9 @@ namespace Plustek.Runner {
                 await HandleBackFaceAsync(outputPath, barcode.Text);
             } else {
                 // STEP 2: We have back face, now get the FRONT face
-                if (barcode != null) {
-                    Console.WriteLine("❌ Barcode detected");
-                    Console.WriteLine("⚠️  This appears to be the back face. Please scan the FRONT face (without barcode).");
-
-                    // Clean up temp file
-                    if (File.Exists(outputPath)) {
-                        try { File.Delete(outputPath); } catch { }
-                    }
-                    return;
-                }
-
-                // No barcode = FRONT face
-                Console.WriteLine("✓ No barcode - Front face detected");
+                // No barcode check - just accept the scan as front face
+                // User can type 'reset' if they made a mistake
+                Console.WriteLine("✓ Processing front face (no barcode check)");
                 await HandleFrontFaceAsync(outputPath);
             }
         }
@@ -274,9 +290,6 @@ namespace Plustek.Runner {
                 File.Move(tempPath, backPath, overwrite: true);
             }
             _backFacePath = backPath;
-
-            // Save outputs
-            await _outputWriter.SaveAsync(idData, backPath);
 
             // Save to Excel database
             await _excelDatabase.SaveRecordAsync(idData, null, backPath);
